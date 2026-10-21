@@ -170,6 +170,9 @@
 
   /* gata andando pela tela */
   .andarilha{position:fixed;bottom:70px;left:-80px;font-size:44px;z-index:20;cursor:pointer;user-select:none}
+  .andarilha .corpo{display:inline-block}
+  .andarilha .flip{display:inline-block;transform:scaleX(-1)}
+  #bg3d{position:fixed;inset:0;width:100vw;height:100vh;z-index:-1;pointer-events:none;display:block}
   .andarilha .nome{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);background:#000;color:var(--vue);font-family:"VT323",monospace;font-size:16px;padding:0 6px;white-space:nowrap;border:2px solid var(--vue)}
   .teclado{font-family:"VT323",monospace;color:var(--rosa);font-size:20px;word-break:break-all;min-height:26px;text-align:center}
 
@@ -178,6 +181,7 @@
 </style>
 </head>
 <body>
+<canvas id="bg3d" aria-hidden="true"></canvas>
 
 <div class="warn">⚠️ <b>npm WARN</b> ana-laura@2.0.0 ainda não foi contratada por você. <a href="#contato" style="color:#000;font-weight:700">resolver agora →</a></div>
 <div class="marquee"><span>🐈 NOVO!!! agora com 4 gatas no time de QA 🐈 &nbsp;&nbsp; *** 0 bugs em produção (que eu saiba) *** &nbsp;&nbsp; 💚 feito sem framework porque o Vue tava de folga 💚 &nbsp;&nbsp; melhor visualizado no Netscape Navigator com uma gata no colo &nbsp;&nbsp; 🐔 ex-avicultora, atual dev, futura sua contratada 🐔</span></div>
@@ -350,6 +354,9 @@
   </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 /* ====== experiências ====== */
 const LOG = [
@@ -446,15 +453,23 @@ function miau(i,el){
   chuva("🐾");
 }
 
-/* gata atravessando a tela */
+/* gata atravessando a tela (só o emoji é espelhado, o nome não) */
 function andarilha(){
   const g=GATAS[Math.floor(Math.random()*GATAS.length)];
   const d=document.createElement("div"); d.className="andarilha";
-  d.innerHTML=`<span class="nome">${g.nome}</span>${g.cara}`;
-  d.onclick=()=>{ d.querySelector(".nome").textContent="miau!"; chuva("🐾"); };
+  d.innerHTML=`<span class="nome">${g.nome}</span><span class="corpo"><span class="flip">${g.cara}</span></span>`;
+  d.onclick=()=>{
+    d.querySelector(".nome").textContent="miau!"; chuva("🐾");
+    if(window.gsap) gsap.to(d.querySelector(".corpo"),{y:-70,duration:.3,yoyo:true,repeat:1,ease:"power2.out"});
+  };
   document.body.appendChild(d);
-  const dist = innerWidth + 160, dur = 9000 + Math.random()*4000;
-  d.animate([{transform:"translateX(0) scaleX(-1)"},{transform:`translateX(${dist}px) scaleX(-1)`}],{duration:dur,easing:"linear"}).onfinish=()=>d.remove();
+  const dist = innerWidth + 160, dur = 9 + Math.random()*4;
+  if(window.gsap){
+    gsap.to(d,{x:dist,duration:dur,ease:"none",onComplete:()=>d.remove()});
+    gsap.to(d.querySelector(".corpo"),{y:-8,rotation:6,duration:.22,yoyo:true,repeat:-1,ease:"sine.inOut"});
+  } else {
+    d.animate([{transform:"translateX(0)"},{transform:`translateX(${dist}px)`}],{duration:dur*1000,easing:"linear"}).onfinish=()=>d.remove();
+  }
 }
 setTimeout(andarilha,4000); setInterval(andarilha,22000);
 
@@ -504,6 +519,135 @@ function chuva(em){
     s.style.left=Math.random()*innerWidth+"px"; s.style.top=Math.random()*innerHeight*.6+"px"; s.style.fontSize="30px";
     document.body.appendChild(s); setTimeout(()=>s.remove(),900); }
 }
+</script>
+
+<script>
+/* ====== animações: Three.js (fundo 3D) + GSAP (scroll) ====== */
+const calmo = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* --- fundo 3D: chão synthwave + partículas + cristal girando --- */
+(function fundo3d(){
+  if(!window.THREE || calmo) return;
+  const canvas = document.getElementById("bg3d");
+  const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  const scene = new THREE.Scene();
+  scene.fog = new THREE.Fog(0x120b1f, 8, 42);
+  const cam = new THREE.PerspectiveCamera(60, 1, .1, 100);
+  cam.position.set(0, 2.2, 8);
+
+  // chão de grade que anda pra frente (loop infinito)
+  const grid = new THREE.GridHelper(80, 60, 0xa855f7, 0x42b883);
+  grid.material.transparent = true; grid.material.opacity = .45;
+  grid.position.y = -2;
+  scene.add(grid);
+  const passo = 80/60;
+
+  // cristal wireframe (lembra o triângulo do Vue)
+  const cristal = new THREE.Mesh(
+    new THREE.IcosahedronGeometry(2.4, 0),
+    new THREE.MeshBasicMaterial({color:0x42b883, wireframe:true, transparent:true, opacity:.55})
+  );
+  cristal.position.set(4.5, 2.2, -6);
+  scene.add(cristal);
+  const anel = new THREE.Mesh(
+    new THREE.TorusGeometry(3.4, .03, 8, 80),
+    new THREE.MeshBasicMaterial({color:0xa855f7, transparent:true, opacity:.6})
+  );
+  anel.position.copy(cristal.position);
+  scene.add(anel);
+
+  // partículas verdes e roxas
+  const N = innerWidth < 640 ? 350 : 900;
+  const pos = new Float32Array(N*3), cor = new Float32Array(N*3);
+  const verde = new THREE.Color(0x42b883), roxo = new THREE.Color(0xa855f7), rosa = new THREE.Color(0xff5fd2);
+  for(let i=0;i<N;i++){
+    pos[i*3]=(Math.random()-.5)*50; pos[i*3+1]=Math.random()*18-1; pos[i*3+2]=(Math.random()-.5)*50;
+    const c=[verde,roxo,rosa][i%3]; cor[i*3]=c.r; cor[i*3+1]=c.g; cor[i*3+2]=c.b;
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute("position", new THREE.BufferAttribute(pos,3));
+  geo.setAttribute("color", new THREE.BufferAttribute(cor,3));
+  const pontos = new THREE.Points(geo, new THREE.PointsMaterial({size:.09, vertexColors:true, transparent:true, opacity:.9}));
+  scene.add(pontos);
+
+  function tamanho(){
+    const w=innerWidth, h=innerHeight;
+    renderer.setSize(w,h,false); cam.aspect=w/h; cam.updateProjectionMatrix();
+    cristal.position.x = w<820 ? 0 : 4.5; anel.position.x = cristal.position.x;
+  }
+  tamanho(); addEventListener("resize", tamanho);
+
+  let mx=0, my=0, rolagem=0;
+  addEventListener("mousemove", e=>{ mx=e.clientX/innerWidth-.5; my=e.clientY/innerHeight-.5; });
+  addEventListener("scroll", ()=>{ rolagem = scrollY/(document.body.scrollHeight-innerHeight||1); }, {passive:true});
+
+  const relogio = new THREE.Clock();
+  function loop(){
+    requestAnimationFrame(loop);
+    if(document.hidden) return;
+    const t = relogio.getElapsedTime();
+    grid.position.z = (t*1.6) % passo;
+    cristal.rotation.x = t*.25; cristal.rotation.y = t*.4 + rolagem*6;
+    anel.rotation.x = Math.PI/2.4 + Math.sin(t*.5)*.2; anel.rotation.z = t*.3;
+    pontos.rotation.y = t*.02 + rolagem*1.5;
+    cam.position.x += (mx*2 - cam.position.x)*.04;
+    cam.position.y += (2.2 - my*1.2 - rolagem*1.5 - cam.position.y)*.04;
+    cam.lookAt(0, 1 - rolagem*2, -6);
+    renderer.render(scene, cam);
+  }
+  loop();
+})();
+
+/* --- GSAP --- */
+(function animacoes(){
+  if(!window.gsap || calmo) return;
+  gsap.registerPlugin(ScrollTrigger);
+
+  // popup da Kanon entra quicando
+  gsap.from("#popup .win",{scale:0, rotation:-12, duration:.8, ease:"elastic.out(1,.55)", delay:.2});
+
+  // hero
+  const h = gsap.timeline({defaults:{ease:"back.out(1.7)"}});
+  h.from(".hero .tag",{y:-40, opacity:0, rotation:-10, duration:.6})
+   .from(".hero h1",{y:60, opacity:0, skewY:6, duration:.8}, "-=.3")
+   .from(".hero p.sub",{y:30, opacity:0, duration:.5}, "-=.4")
+   .from(".hero .ctas .btn",{scale:0, stagger:.12, duration:.5}, "-=.2")
+   .from(".hero .win",{x:120, opacity:0, rotation:4, duration:.8}, "-=.9");
+
+  // títulos de seção
+  gsap.utils.toArray("h2.titulo").forEach(t=>{
+    gsap.from(t,{scrollTrigger:{trigger:t, start:"top 88%"}, y:40, scale:.7, opacity:0, rotation:-3, duration:.7, ease:"back.out(2)"});
+  });
+
+  // janelas surgem
+  gsap.utils.toArray("#sobre .win, #log .win, #skills .win, #contato .win").forEach(w=>{
+    gsap.from(w,{scrollTrigger:{trigger:w, start:"top 85%"}, y:60, opacity:0, duration:.7, ease:"power3.out"});
+  });
+
+  // commits um por um
+  gsap.from(".commit",{scrollTrigger:{trigger:"#gitlog", start:"top 80%"}, x:-60, opacity:0, stagger:.18, duration:.6, ease:"power3.out"});
+
+  // barrinhas de skill enchendo
+  gsap.from(".bar-s i",{scrollTrigger:{trigger:"#pkg", start:"top 80%"}, width:0, stagger:.08, duration:1, ease:"power2.out"});
+
+  // gatas caem quicando
+  gsap.from(".gata",{scrollTrigger:{trigger:"#gridGatas", start:"top 85%"}, y:-120, opacity:0, rotation:()=>gsap.utils.random(-25,25), stagger:.15, duration:1.1, ease:"bounce.out"});
+
+  // planos e reviews
+  gsap.from(".plano",{scrollTrigger:{trigger:".precos", start:"top 85%"}, y:80, opacity:0, stagger:.15, duration:.7, ease:"back.out(1.6)"});
+  gsap.from(".dep",{scrollTrigger:{trigger:".deps", start:"top 85%"}, scale:0, opacity:0, rotation:()=>gsap.utils.random(-20,20), stagger:.12, duration:.7, ease:"back.out(2)"});
+
+  // botões gelatina
+  document.querySelectorAll(".btn").forEach(b=>{
+    b.addEventListener("mouseenter",()=>gsap.fromTo(b,{scaleX:1,scaleY:1},{keyframes:[{scaleX:1.15,scaleY:.85,duration:.12},{scaleX:.92,scaleY:1.08,duration:.12},{scaleX:1,scaleY:1,duration:.3,ease:"elastic.out(1,.4)"}]}));
+  });
+
+  // gatas da equipe pulam ao clicar
+  document.querySelectorAll(".gata").forEach(g=>{
+    g.addEventListener("click",()=>gsap.fromTo(g.querySelector(".cara"),{y:0},{y:-40, rotation:360, duration:.5, yoyo:true, repeat:1, ease:"power2.out", onComplete:()=>gsap.set(g.querySelector(".cara"),{rotation:0})}));
+  });
+})();
 </script>
 </body>
 </html>
