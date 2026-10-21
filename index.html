@@ -113,7 +113,6 @@
   /* equipe de gatas */
   .gatas{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px}
   .gata{background:var(--roxo-cl);color:#000;border:4px solid #000;box-shadow:6px 6px 0 var(--vue);padding:16px;text-align:center;transition:transform .15s;cursor:pointer}
-  .gata:hover{transform:rotate(-2deg) scale(1.03)}
   .gata .cara{font-size:64px;line-height:1}
   .gata h3{font-family:"Press Start 2P",monospace;font-size:13px;margin:12px 0 4px;line-height:1.5}
   .gata .cargo{display:inline-block;background:#000;color:var(--vue);font-family:"VT323",monospace;font-size:19px;padding:0 8px}
@@ -177,11 +176,59 @@
   .teclado{font-family:"VT323",monospace;color:var(--rosa);font-size:20px;word-break:break-all;min-height:26px;text-align:center}
 
   .sparkle{position:fixed;pointer-events:none;z-index:99;font-size:18px;animation:fall .9s ease-out forwards}
+
+  /* ====== motion ====== */
+  .win{background:rgba(10,10,18,.8)}
+  #loader{display:none;position:fixed;inset:0;z-index:1000}
+  .motion #loader{display:block}
+  #loader .ld-cortina{position:absolute;left:0;right:0;height:50.5%;background:#0a0612}
+  #loader .top{top:0;border-bottom:3px solid var(--vue)}
+  #loader .bot{bottom:0;border-top:3px solid var(--roxo)}
+  #loader .ld-in{position:absolute;inset:0;display:grid;place-content:center;gap:20px;text-align:center;z-index:2}
+  .ld-logo{font-family:"Press Start 2P",monospace;font-size:clamp(20px,5vw,40px);color:var(--vue);min-height:1.2em}
+  .ld-bar{width:min(340px,70vw);height:16px;border:3px solid var(--roxo);margin:0 auto}
+  .ld-bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--vue),var(--roxo),var(--rosa))}
+  .ld-txt{font-family:"VT323",monospace;font-size:22px;color:var(--roxo-cl)}
+  #progresso{position:fixed;top:0;left:0;height:4px;width:100%;transform-origin:0 50%;transform:scaleX(0);background:linear-gradient(90deg,var(--vue),var(--roxo),var(--rosa));z-index:200;pointer-events:none}
+  #cursor,#cursorDot{position:fixed;top:0;left:0;pointer-events:none;z-index:999;border-radius:50%;display:none}
+  .cursor-on #cursor{display:block;width:40px;height:40px;margin:-20px 0 0 -20px;border:2px solid var(--vue);mix-blend-mode:difference}
+  .cursor-on #cursorDot{display:block;width:6px;height:6px;margin:-3px 0 0 -3px;background:var(--rosa)}
+  .cursor-on, .cursor-on *{cursor:none !important}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;text-align:center}
+  @media (max-width:700px){.stats{grid-template-columns:repeat(2,1fr)}}
+  .stats > div{background:var(--tela);border:3px solid var(--vue);padding:20px 10px;box-shadow:5px 5px 0 var(--roxo)}
+  .stats b{display:block;font-family:"Press Start 2P",monospace;font-size:clamp(22px,4vw,36px);color:var(--amarelo);margin-bottom:10px}
+  .stats span{font-family:"VT323",monospace;font-size:20px}
+  .faixa{width:110vw;margin:70px 0 70px calc(50% - 55vw);overflow:hidden;white-space:nowrap;padding:14px 0;background:var(--vue);color:#000;transform:rotate(-2deg);border-block:4px solid #000}
+  .faixa.rev{background:var(--roxo);color:#fff;transform:rotate(2deg)}
+  .faixa-in{display:inline-block;font-family:"Press Start 2P",monospace;font-size:clamp(18px,3.6vw,36px)}
+  .faixa-in .o{color:transparent;-webkit-text-stroke:2px #000}
+  .faixa.rev .faixa-in .o{-webkit-text-stroke:2px #fff}
+  .log.anim .commit{border-left-color:transparent}
+  .log .linha{position:absolute;left:24px;top:16px;bottom:16px;width:4px;background:linear-gradient(var(--vue),var(--roxo),var(--rosa));transform-origin:50% 0}
+  .tilt{position:relative}
+  .tilt::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at var(--gx,50%) var(--gy,50%),rgba(255,255,255,.4),transparent 55%);opacity:0;transition:opacity .3s}
+  .tilt:hover::after{opacity:1}
+  .anel{position:fixed;width:40px;height:40px;margin:-20px 0 0 -20px;border:3px solid var(--vue);border-radius:50%;pointer-events:none;z-index:998}
+  .estilhaco{position:fixed;pointer-events:none;z-index:998;font-family:"Press Start 2P",monospace;font-size:14px;margin:-7px 0 0 -7px}
   @keyframes fall{to{transform:translateY(40px) rotate(180deg);opacity:0}}
 </style>
+<script>
+  // a intro só aparece pra quem não pediu "reduzir movimento"; some sozinha se algo falhar
+  if(!matchMedia("(prefers-reduced-motion: reduce)").matches){
+    document.documentElement.classList.add("motion");
+    setTimeout(function(){ var l=document.getElementById("loader"); if(l) l.remove(); }, 7000);
+  }
+</script>
 </head>
 <body>
 <canvas id="bg3d" aria-hidden="true"></canvas>
+<div id="loader" aria-hidden="true">
+  <div class="ld-cortina top"></div><div class="ld-cortina bot"></div>
+  <div class="ld-in"><div class="ld-logo"></div><div class="ld-bar"><i></i></div><div class="ld-txt">compilando criatividade... <span id="ldPct">0</span>%</div></div>
+</div>
+<div id="progresso"></div>
+<div id="cursor"></div><div id="cursorDot"></div>
 
 <div class="warn">⚠️ <b>npm WARN</b> ana-laura@2.0.0 ainda não foi contratada por você. <a href="#contato" style="color:#000;font-weight:700">resolver agora →</a></div>
 <div class="marquee"><span>🔥 NOVO!!! agora com 3% MAIS TYPESCRIPT 🔥 &nbsp;&nbsp; *** 0 bugs em produção (que eu saiba) *** &nbsp;&nbsp; 💚 feito sem framework porque o Vue tava de folga 💚 &nbsp;&nbsp; melhor visualizado no Netscape Navigator 4.0 &nbsp;&nbsp; 🚫 não fazemos deploy na sexta 🚫 &nbsp;&nbsp; 🐔 ex-avicultora, atual dev, futura sua contratada 🐔</span></div>
@@ -216,6 +263,16 @@
       <div class="body term" id="term"></div>
     </div>
   </section>
+
+  <!-- NÚMEROS -->
+  <section class="stats">
+    <div><b class="num" data-n="45">45</b><span>meses de Unipac</span></div>
+    <div><b class="num" data-n="10">10</b><span>dependências no package.json</span></div>
+    <div><b class="num" data-n="2">2</b><span>anos cuidando de galinhas</span></div>
+    <div><b class="num" data-n="0" data-fake="99">0</b><span>deploys na sexta</span></div>
+  </section>
+
+  <div class="faixa"><div class="faixa-in">VUE.JS ✦ <span class="o">TYPESCRIPT</span> ✦ ADONISJS ✦ <span class="o">SQL</span> ✦ TAILWIND ✦ <span class="o">GIT</span> ✦ </div></div>
 
   <!-- SOBRE -->
   <section id="sobre">
@@ -256,6 +313,8 @@
     <div class="gatas" id="gridGatas"></div>
     <p class="teclado" id="teclado"></p>
   </section>
+
+  <div class="faixa rev"><div class="faixa-in">CONTRATA ✦ <span class="o">ELA</span> ✦ CONTRATA ✦ <span class="o">ELA</span> ✦ </div></div>
 
   <!-- PLANOS -->
   <section id="precos">
@@ -354,8 +413,11 @@
   </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/ScrollTrigger.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/SplitText.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/ScrambleTextPlugin.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/Physics2DPlugin.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 /* ====== experiências ====== */
@@ -522,131 +584,314 @@ function chuva(em){
 </script>
 
 <script>
-/* ====== animações: Three.js (fundo 3D) + GSAP (scroll) ====== */
+/* ====== MOTION: Three.js + GSAP (ScrollTrigger, SplitText, ScrambleText, Physics2D) ====== */
 const calmo = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const temMouse = matchMedia("(pointer: fine)").matches;
+const celular = innerWidth < 700;
+let velo = 0; // velocidade da rolagem, usada pelo 3D
+if(calmo || !window.gsap){ const l=document.getElementById("loader"); if(l) l.remove(); }
 
-/* --- fundo 3D: chão synthwave + partículas + cristal girando --- */
-(function fundo3d(){
-  if(!window.THREE || calmo) return;
-  const canvas = document.getElementById("bg3d");
-  const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
-  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
-  const scene = new THREE.Scene();
-  scene.fog = new THREE.Fog(0x120b1f, 8, 42);
-  const cam = new THREE.PerspectiveCamera(60, 1, .1, 100);
-  cam.position.set(0, 2.2, 8);
-
-  // chão de grade que anda pra frente (loop infinito)
-  const grid = new THREE.GridHelper(80, 60, 0xa855f7, 0x42b883);
-  grid.material.transparent = true; grid.material.opacity = .45;
-  grid.position.y = -2;
-  scene.add(grid);
-  const passo = 80/60;
-
-  // cristal wireframe (lembra o triângulo do Vue)
-  const cristal = new THREE.Mesh(
-    new THREE.IcosahedronGeometry(2.4, 0),
-    new THREE.MeshBasicMaterial({color:0x42b883, wireframe:true, transparent:true, opacity:.55})
-  );
-  cristal.position.set(4.5, 2.2, -6);
-  scene.add(cristal);
-  const anel = new THREE.Mesh(
-    new THREE.TorusGeometry(3.4, .03, 8, 80),
-    new THREE.MeshBasicMaterial({color:0xa855f7, transparent:true, opacity:.6})
-  );
-  anel.position.copy(cristal.position);
-  scene.add(anel);
-
-  // partículas verdes e roxas
-  const N = innerWidth < 640 ? 350 : 900;
-  const pos = new Float32Array(N*3), cor = new Float32Array(N*3);
-  const verde = new THREE.Color(0x42b883), roxo = new THREE.Color(0xa855f7), rosa = new THREE.Color(0xff5fd2);
-  for(let i=0;i<N;i++){
-    pos[i*3]=(Math.random()-.5)*50; pos[i*3+1]=Math.random()*18-1; pos[i*3+2]=(Math.random()-.5)*50;
-    const c=[verde,roxo,rosa][i%3]; cor[i*3]=c.r; cor[i*3+1]=c.g; cor[i*3+2]=c.b;
+/* ---------- formas que as partículas assumem ---------- */
+function gerarFormas(N){
+  const R=Math.random, j=s=>(R()-.5)*s;
+  const arr=f=>{ const a=new Float32Array(N*3); for(let i=0;i<N;i++){ const p=f(i); a[i*3]=p[0]; a[i*3+1]=p[1]; a[i*3+2]=p[2]; } return a; };
+  // sorteia um ponto ao longo de uma linha poligonal
+  function linha(pts,fechado){
+    const segs=[]; let tot=0; const m=fechado?pts.length:pts.length-1;
+    for(let i=0;i<m;i++){ const a=pts[i], b=pts[(i+1)%pts.length], l=Math.hypot(b[0]-a[0],b[1]-a[1]); segs.push([a,b,l]); tot+=l; }
+    return ()=>{ let d=R()*tot; for(const [a,b,l] of segs){ if(d<=l){ const t=d/l; return [a[0]+(b[0]-a[0])*t, a[1]+(b[1]-a[1])*t]; } d-=l; } return segs[0][0]; };
   }
-  const geo = new THREE.BufferGeometry();
+  const vueFora=linha([[-4.2,3.4],[0,-3.6],[4.2,3.4],[1.7,3.4],[0,.6],[-1.7,3.4]],true);
+  const vueDentro=linha([[-1.7,3.4],[0,.6],[1.7,3.4],[.85,3.4],[0,1.95],[-.85,3.4]],true);
+  const orelhaE=linha([[-2.25,1],[-2,3.7],[-.7,2.1]],false), orelhaD=linha([[2.25,1],[2,3.7],[.7,2.1]],false);
+  const bigodes=[linha([[-1.1,-.75],[-3.3,-.35]]),linha([[-1.1,-.95],[-3.3,-1.2]]),linha([[1.1,-.75],[3.3,-.35]]),linha([[1.1,-.95],[3.3,-1.2]])];
+  const nos=new THREE.TorusKnotGeometry(2.1,.55,240,18).attributes.position.array;
+  return {
+    nuvem: arr(()=>[j(36), j(18)+2, j(30)]),
+    esfera: arr(i=>{ const y=1-(i/(N-1))*2, r=Math.sqrt(1-y*y), a=i*2.39996, s=3.1; return [Math.cos(a)*r*s, y*s, Math.sin(a)*r*s]; }),
+    vue: arr(()=>{ const p=(R()<.7?vueFora:vueDentro)(); return [p[0]+j(.12), p[1]+j(.12)-.2, j(.5)]; }),
+    helice: arr(i=>{
+      const t=R(), y=-4+8*t, a=t*Math.PI*5;
+      if(i%7===0){ const t2=Math.round(t*24)/24, a2=t2*Math.PI*5, u=1-2*R(); return [Math.cos(a2)*1.7*u, -4+8*t2, Math.sin(a2)*1.7*u]; }
+      const o=i%2?Math.PI:0; return [Math.cos(a+o)*1.7+j(.08), y, Math.sin(a+o)*1.7+j(.08)];
+    }),
+    cubo: arr(()=>{
+      const s=2.4, f=Math.floor(R()*6), ax=f>>1, p=[0,0,0];
+      p[ax]=(f&1?1:-1)*s; p[(ax+1)%3]=(R()*2-1)*s; p[(ax+2)%3]=(R()*2-1)*s;
+      if(R()<.55){ const k=R()<.5?(ax+1)%3:(ax+2)%3; p[k]=(p[k]<0?-1:1)*s; } // metade nas arestas
+      return p;
+    }),
+    gato: arr(()=>{
+      const r=R(); let p;
+      if(r<.42){ const a=R()*Math.PI*2; p=[Math.cos(a)*2.6, Math.sin(a)*2.3-.2]; }
+      else if(r<.6) p=(R()<.5?orelhaE:orelhaD)();
+      else if(r<.74){ const a=R()*Math.PI*2, s=R()<.5?-1:1; p=[s+Math.cos(a)*.38, .45+Math.sin(a)*.5]; }
+      else if(r<.8){ const a=R()*Math.PI*2, k=R(); p=[Math.cos(a)*.24*k, -.35+Math.sin(a)*.16*k]; }
+      else p=bigodes[Math.floor(R()*4)]();
+      return [p[0]+j(.06), p[1]+j(.06), j(.3)];
+    }),
+    no: arr(()=>{ const k=Math.floor(R()*(nos.length/3))*3; return [nos[k], nos[k+1], nos[k+2]]; }),
+    coracao: arr(()=>{
+      const t=R()*Math.PI*2, f=R()<.75?1:R();
+      const x=16*Math.pow(Math.sin(t),3), y=13*Math.cos(t)-5*Math.cos(2*t)-2*Math.cos(3*t)-Math.cos(4*t);
+      return [x*.19*f, y*.19*f+.3, j(.6)];
+    }),
+  };
+}
+
+/* ---------- mundo 3D ---------- */
+const mundo = (function(){
+  if(!window.THREE || calmo) return null;
+  const canvas=document.getElementById("bg3d");
+  const renderer=new THREE.WebGLRenderer({canvas, antialias:!celular, alpha:true});
+  renderer.setPixelRatio(Math.min(devicePixelRatio, celular?1.5:2));
+  const scene=new THREE.Scene(); scene.fog=new THREE.Fog(0x120b1f, 8, 42);
+  const cam=new THREE.PerspectiveCamera(60,1,.1,100); cam.position.set(0,2.2,9);
+
+  // chão synthwave
+  const grid=new THREE.GridHelper(80,60,0xa855f7,0x42b883);
+  grid.material.transparent=true; grid.material.opacity=.4; grid.position.y=-2.6;
+  scene.add(grid);
+  const passo=80/60;
+
+  // estrelas no fundo
+  const NE=celular?250:600, pe=new Float32Array(NE*3);
+  for(let i=0;i<NE;i++){ pe[i*3]=(Math.random()-.5)*70; pe[i*3+1]=Math.random()*30-2; pe[i*3+2]=-10-Math.random()*30; }
+  const ge=new THREE.BufferGeometry(); ge.setAttribute("position", new THREE.BufferAttribute(pe,3));
+  const estrelas=new THREE.Points(ge, new THREE.PointsMaterial({size:.06, color:0xe9d5ff, transparent:true, opacity:.7}));
+  scene.add(estrelas);
+
+  // partículas com física de mola: cada uma persegue seu ponto na forma atual
+  const N=celular?900:2200, F=gerarFormas(N);
+  const pos=Float32Array.from(F.nuvem), vel=new Float32Array(N*3); let alvo=F.esfera;
+  const cor=new Float32Array(N*3);
+  const cs=[new THREE.Color(0x42b883), new THREE.Color(0xa855f7), new THREE.Color(0xff5fd2), new THREE.Color(0xffffff)];
+  for(let i=0;i<N;i++){ const r=Math.random(), c=r<.45?cs[0]:r<.85?cs[1]:r<.97?cs[2]:cs[3]; cor[i*3]=c.r; cor[i*3+1]=c.g; cor[i*3+2]=c.b; }
+  const geo=new THREE.BufferGeometry();
   geo.setAttribute("position", new THREE.BufferAttribute(pos,3));
   geo.setAttribute("color", new THREE.BufferAttribute(cor,3));
-  const pontos = new THREE.Points(geo, new THREE.PointsMaterial({size:.09, vertexColors:true, transparent:true, opacity:.9}));
-  scene.add(pontos);
+  const pontos=new THREE.Points(geo, new THREE.PointsMaterial({size:celular?.09:.075, vertexColors:true, transparent:true, opacity:.95, blending:THREE.AdditiveBlending, depthWrite:false}));
+  const grupo=new THREE.Group(); grupo.add(pontos); grupo.position.set(0,1.4,-2); scene.add(grupo);
 
   function tamanho(){
     const w=innerWidth, h=innerHeight;
     renderer.setSize(w,h,false); cam.aspect=w/h; cam.updateProjectionMatrix();
-    cristal.position.x = w<820 ? 0 : 4.5; anel.position.x = cristal.position.x;
+    grupo.scale.setScalar(Math.min(1,(w/h)*.85));
   }
   tamanho(); addEventListener("resize", tamanho);
 
-  let mx=0, my=0, rolagem=0;
-  addEventListener("mousemove", e=>{ mx=e.clientX/innerWidth-.5; my=e.clientY/innerHeight-.5; });
-  addEventListener("scroll", ()=>{ rolagem = scrollY/(document.body.scrollHeight-innerHeight||1); }, {passive:true});
+  // mouse empurra as partículas
+  const ray=new THREE.Raycaster(), ndc=new THREE.Vector2(), plano=new THREE.Plane(new THREE.Vector3(0,0,1),2), ponto=new THREE.Vector3();
+  let mx=0, my=0, temRato=false;
+  addEventListener("mousemove", e=>{ mx=e.clientX/innerWidth-.5; my=e.clientY/innerHeight-.5; ndc.set(mx*2,-my*2); temRato=true; });
+  document.addEventListener("mouseleave", ()=>{ temRato=false; });
 
-  const relogio = new THREE.Clock();
+  const relogio=new THREE.Clock(); let giro=0, quadros=0, inicio=0, avaliado=false, parado=false;
   function loop(){
+    if(parado) return;
     requestAnimationFrame(loop);
-    if(document.hidden) return;
-    const t = relogio.getElapsedTime();
-    grid.position.z = (t*1.6) % passo;
-    cristal.rotation.x = t*.25; cristal.rotation.y = t*.4 + rolagem*6;
-    anel.rotation.x = Math.PI/2.4 + Math.sin(t*.5)*.2; anel.rotation.z = t*.3;
-    pontos.rotation.y = t*.02 + rolagem*1.5;
-    cam.position.x += (mx*2 - cam.position.x)*.04;
-    cam.position.y += (2.2 - my*1.2 - rolagem*1.5 - cam.position.y)*.04;
-    cam.lookAt(0, 1 - rolagem*2, -6);
-    renderer.render(scene, cam);
+    if(document.hidden){ inicio=0; quadros=0; return; }
+    // se o computador não aguentar o 3D (menos de ~15 fps), desliga ele e deixa o resto do site fluir
+    if(!avaliado){
+      const agora=performance.now(); if(!inicio) inicio=agora; quadros++;
+      if(agora-inicio>2000){ avaliado=true; if(quadros<30){ parado=true; canvas.style.display="none"; renderer.dispose(); renderer.forceContextLoss(); return; } }
+    }
+    const dt=Math.min(relogio.getDelta(),.05), t=relogio.elapsedTime;
+    const v01=Math.min(Math.abs(velo)/2500,1);
+    grid.position.z=(grid.position.z + dt*(1.6+v01*16)) % passo;
+    giro+=dt*(.15+v01*3);
+    grupo.rotation.y=giro; grupo.rotation.x=Math.sin(t*.3)*.15;
+
+    let rx=1e9, ry=1e9, rz=1e9;
+    if(temRato){ ray.setFromCamera(ndc,cam); if(ray.ray.intersectPlane(plano,ponto)){ grupo.worldToLocal(ponto); rx=ponto.x; ry=ponto.y; rz=ponto.z; } }
+    for(let i=0;i<N*3;i+=3){
+      vel[i]+=(alvo[i]-pos[i])*.018; vel[i+1]+=(alvo[i+1]-pos[i+1])*.018; vel[i+2]+=(alvo[i+2]-pos[i+2])*.018;
+      const dx=pos[i]-rx, dy=pos[i+1]-ry, dz=pos[i+2]-rz, d2=dx*dx+dy*dy+dz*dz;
+      if(d2<2.2){ const f=(2.2-d2)*.06; vel[i]+=dx*f; vel[i+1]+=dy*f; vel[i+2]+=dz*f; }
+      vel[i]*=.86; vel[i+1]*=.86; vel[i+2]*=.86;
+      pos[i]+=vel[i]; pos[i+1]+=vel[i+1]+Math.sin(t*2+i)*.0015; pos[i+2]+=vel[i+2];
+    }
+    geo.attributes.position.needsUpdate=true;
+    estrelas.rotation.y=t*.01;
+    cam.position.x+=(mx*1.5-cam.position.x)*.05;
+    cam.position.y+=(2.2-my-cam.position.y)*.05;
+    cam.lookAt(0,1,-4);
+    renderer.render(scene,cam);
   }
   loop();
+
+  return {
+    forma(n){ if(F[n] && alvo!==F[n]){ alvo=F[n]; for(let i=0;i<N*3;i++) vel[i]+=(Math.random()-.5)*.35; } },
+    pulso(){ for(let i=0;i<N*3;i++) vel[i]+=pos[i]*.08; }
+  };
 })();
 
-/* --- GSAP --- */
-(function animacoes(){
+/* ---------- GSAP ---------- */
+(function motion(){
   if(!window.gsap || calmo) return;
-  gsap.registerPlugin(ScrollTrigger);
+  gsap.registerPlugin(ScrollTrigger, SplitText, ScrambleTextPlugin, Physics2DPlugin);
+  gsap.ticker.lagSmoothing(0); // mesmo num computador lento, as animações terminam no tempo certo
 
-  // popup da Kanon entra quicando
-  gsap.from("#popup .win",{scale:0, rotation:-12, duration:.8, ease:"elastic.out(1,.55)", delay:.2});
+  /* intro: loader + cortinas abrindo + título caindo letra por letra */
+  const intro=gsap.timeline();
+  const pct={v:0}, pctEl=document.getElementById("ldPct");
+  intro.to(pct,{v:100, duration:1.4, ease:"power2.inOut", onUpdate:()=>{ if(pctEl) pctEl.textContent=Math.round(pct.v); }})
+       .to("#loader .ld-bar i",{width:"100%", duration:1.4, ease:"power2.inOut"},0)
+       .to("#loader .ld-logo",{scrambleText:{text:"ANA LAURA", chars:"01<>/{}#$%", speed:.5}, duration:1.3},0)
+       .to("#loader .ld-in",{scale:.85, opacity:0, duration:.35, ease:"power2.in"})
+       .to("#loader .top",{yPercent:-100, duration:.9, ease:"expo.inOut"},"<.1")
+       .to("#loader .bot",{yPercent:100, duration:.9, ease:"expo.inOut"},"<")
+       .add(()=>{ const l=document.getElementById("loader"); if(l) l.remove(); });
 
-  // hero
-  const h = gsap.timeline({defaults:{ease:"back.out(1.7)"}});
-  h.from(".hero .tag",{y:-40, opacity:0, rotation:-10, duration:.6})
-   .from(".hero h1",{y:60, opacity:0, skewY:6, duration:.8}, "-=.3")
-   .from(".hero p.sub",{y:30, opacity:0, duration:.5}, "-=.4")
-   .from(".hero .ctas .btn",{scale:0, stagger:.12, duration:.5}, "-=.2")
-   .from(".hero .win",{x:120, opacity:0, rotation:4, duration:.8}, "-=.9");
+  const titulo=SplitText.create(".hero h1",{type:"words,chars"});
+  intro.from(titulo.chars,{yPercent:130, rotationX:-100, opacity:0, transformPerspective:600, transformOrigin:"50% 100%", stagger:.022, duration:.9, ease:"back.out(2.2)"},"-=.55")
+       .from(".hero .tag",{y:-70, rotation:-25, opacity:0, duration:.9, ease:"elastic.out(1,.5)"},"<.1")
+       .from(".hero p.sub",{y:30, opacity:0, filter:"blur(10px)", duration:.8},"<.4")
+       .from(".hero .ctas .btn",{scale:0, rotation:()=>gsap.utils.random(-30,30), stagger:.1, duration:.8, ease:"elastic.out(1,.5)"},"<.2")
+       .from(".hero .win",{x:220, rotationY:-45, opacity:0, transformPerspective:900, duration:1.2, ease:"expo.out"},"<-.7")
+       .from("nav .logo, nav li, nav .stat",{y:-40, opacity:0, stagger:.05, duration:.5, ease:"back.out(2)"},"<")
+       .from("#popup .win",{scale:0, rotation:-15, duration:.9, ease:"elastic.out(1,.5)"},"-=.2");
 
-  // títulos de seção
+  // letras do título pulam ao passar o mouse
+  titulo.chars.forEach(ch=>ch.addEventListener("mouseenter",()=>{
+    gsap.fromTo(ch,{y:0},{y:-16, rotation:gsap.utils.random(-15,15), duration:.18, yoyo:true, repeat:1, ease:"power2.out", overwrite:true});
+  }));
+  // terminal flutuando
+  gsap.to(".hero .win",{y:-12, duration:2.6, yoyo:true, repeat:-1, ease:"sine.inOut", delay:4});
+
+  /* barra de progresso + inclinação com a velocidade da rolagem */
+  gsap.to("#progresso",{scaleX:1, ease:"none", scrollTrigger:{start:0, end:"max", scrub:.3}});
+  const setSkew=gsap.quickSetter("main","skewY","deg"), proxy={s:0};
+  const faixas=[];
+  ScrollTrigger.create({onUpdate:self=>{
+    velo=self.getVelocity();
+    const s=gsap.utils.clamp(-5,5,velo/-300);
+    if(Math.abs(s)>Math.abs(proxy.s)){ proxy.s=s; gsap.to(proxy,{s:0, duration:.8, ease:"power3", overwrite:true, onUpdate:()=>setSkew(proxy.s)}); }
+    const ts=gsap.utils.clamp(-8,8,(self.direction)*(1+Math.abs(velo)/250));
+    faixas.forEach(f=>{ gsap.to(f,{timeScale:ts, duration:.2, overwrite:true}); gsap.to(f,{timeScale:self.direction, duration:1.2, delay:.25}); });
+  }});
+
+  /* faixas gigantes correndo (aceleram e invertem com a rolagem) */
+  document.querySelectorAll(".faixa-in").forEach(f=>{
+    f.innerHTML=f.innerHTML.repeat(6);
+    const rev=f.parentElement.classList.contains("rev");
+    faixas.push(gsap.fromTo(f,{xPercent:rev?-50:0},{xPercent:rev?0:-50, duration:22, ease:"none", repeat:-1}));
+  });
+
+  /* títulos das seções: decodificam como num terminal */
   gsap.utils.toArray("h2.titulo").forEach(t=>{
-    gsap.from(t,{scrollTrigger:{trigger:t, start:"top 88%"}, y:40, scale:.7, opacity:0, rotation:-3, duration:.7, ease:"back.out(2)"});
+    const n=t.firstChild; if(!n || n.nodeType!==3) return;
+    const sp=document.createElement("span"); sp.textContent=n.textContent; t.replaceChild(sp,n);
+    const final=sp.textContent;
+    gsap.from(t,{y:50, opacity:0, duration:.7, ease:"power3.out", scrollTrigger:{trigger:t, start:"top 88%"}});
+    gsap.to(sp,{scrambleText:{text:final, chars:"01<>/{}[]#$%&*", revealDelay:.15, speed:.5}, duration:1.3, scrollTrigger:{trigger:t, start:"top 88%"}});
   });
 
-  // janelas surgem
-  gsap.utils.toArray("#sobre .win, #log .win, #skills .win, #contato .win").forEach(w=>{
-    gsap.from(w,{scrollTrigger:{trigger:w, start:"top 85%"}, y:60, opacity:0, duration:.7, ease:"power3.out"});
+  /* janelas abrem como uma cortina */
+  gsap.utils.toArray("main section:not(.hero) .win").forEach(w=>{
+    gsap.fromTo(w,{clipPath:"inset(0 100% 0 0)"},{clipPath:"inset(0 0% 0 0)", duration:1.1, ease:"expo.inOut", scrollTrigger:{trigger:w, start:"top 85%"}, onComplete:()=>gsap.set(w,{clearProps:"clipPath"})});
   });
 
-  // commits um por um
-  gsap.from(".commit",{scrollTrigger:{trigger:"#gitlog", start:"top 80%"}, x:-60, opacity:0, stagger:.18, duration:.6, ease:"power3.out"});
-
-  // barrinhas de skill enchendo
-  gsap.from(".bar-s i",{scrollTrigger:{trigger:"#pkg", start:"top 80%"}, width:0, stagger:.08, duration:1, ease:"power2.out"});
-
-  // gatas caem quicando
-  gsap.from(".gata",{scrollTrigger:{trigger:"#gridGatas", start:"top 85%"}, y:-120, opacity:0, rotation:()=>gsap.utils.random(-25,25), stagger:.15, duration:1.1, ease:"bounce.out"});
-
-  // planos e reviews
-  gsap.from(".plano",{scrollTrigger:{trigger:".precos", start:"top 85%"}, y:80, opacity:0, stagger:.15, duration:.7, ease:"back.out(1.6)"});
-  gsap.from(".dep",{scrollTrigger:{trigger:".deps", start:"top 85%"}, scale:0, opacity:0, rotation:()=>gsap.utils.random(-20,20), stagger:.12, duration:.7, ease:"back.out(2)"});
-
-  // botões gelatina
-  document.querySelectorAll(".btn").forEach(b=>{
-    b.addEventListener("mouseenter",()=>gsap.fromTo(b,{scaleX:1,scaleY:1},{keyframes:[{scaleX:1.15,scaleY:.85,duration:.12},{scaleX:.92,scaleY:1.08,duration:.12},{scaleX:1,scaleY:1,duration:.3,ease:"elastic.out(1,.4)"}]}));
+  /* números contando (e o "deploy na sexta" que se arrepende) */
+  gsap.from(".stats > div",{y:70, opacity:0, rotationX:-70, transformPerspective:800, stagger:.1, duration:.9, ease:"back.out(1.7)", scrollTrigger:{trigger:".stats", start:"top 90%"}});
+  document.querySelectorAll(".num").forEach(el=>{
+    const n=+el.dataset.n, fake=el.dataset.fake, o={v:0};
+    el.textContent="0";
+    const tl=gsap.timeline({scrollTrigger:{trigger:el, start:"top 92%"}});
+    if(fake){
+      tl.to(o,{v:+fake, duration:1.4, ease:"power2.out", onUpdate:()=>{ el.textContent=Math.round(o.v); }})
+        .to(el,{x:-6, duration:.05, repeat:7, yoyo:true, color:"#ff5fd2"})
+        .to(o,{v:n, duration:.4, ease:"power4.in", onUpdate:()=>{ el.textContent=Math.round(o.v); }})
+        .to(el,{color:"#ffe14d", x:0, duration:.3});
+    } else {
+      tl.to(o,{v:n, duration:2, ease:"power3.out", onUpdate:()=>{ el.textContent=Math.round(o.v); }});
+    }
   });
 
-  // gatas da equipe pulam ao clicar
+  /* git log: a linha do tempo se desenha conforme rola */
+  const gl=document.getElementById("gitlog");
+  gl.style.position="relative"; gl.classList.add("anim");
+  const linhaT=document.createElement("div"); linhaT.className="linha"; gl.prepend(linhaT);
+  gsap.fromTo(linhaT,{scaleY:0},{scaleY:1, ease:"none", scrollTrigger:{trigger:gl, start:"top 70%", end:"bottom 55%", scrub:.6}});
+  gsap.utils.toArray(".commit").forEach(c=>{
+    gsap.from(c,{x:-90, opacity:0, duration:.8, ease:"power3.out", scrollTrigger:{trigger:c, start:"top 80%"}});
+  });
+
+  /* barrinhas do package.json enchendo */
+  gsap.from(".bar-s i",{width:0, stagger:.08, duration:1.2, ease:"power2.out", scrollTrigger:{trigger:"#pkg", start:"top 80%"}});
+
+  /* gatas caindo do céu, planos e reviews */
+  gsap.from(".gata",{y:-160, opacity:0, rotation:()=>gsap.utils.random(-35,35), stagger:.15, duration:1.2, ease:"bounce.out", scrollTrigger:{trigger:"#gridGatas", start:"top 85%"}});
+  gsap.from(".plano",{y:100, opacity:0, rotationY:()=>gsap.utils.random(-40,40), transformPerspective:900, stagger:.15, duration:.9, ease:"back.out(1.6)", scrollTrigger:{trigger:".precos", start:"top 85%"}});
+  gsap.from(".dep",{scale:0, opacity:0, rotation:()=>gsap.utils.random(-30,30), stagger:.12, duration:.8, ease:"back.out(2)", scrollTrigger:{trigger:".deps", start:"top 85%"}});
   document.querySelectorAll(".gata").forEach(g=>{
-    g.addEventListener("click",()=>gsap.fromTo(g.querySelector(".cara"),{y:0},{y:-40, rotation:360, duration:.5, yoyo:true, repeat:1, ease:"power2.out", onComplete:()=>gsap.set(g.querySelector(".cara"),{rotation:0})}));
+    g.addEventListener("click",()=>gsap.fromTo(g.querySelector(".cara"),{y:0, rotation:0},{y:-40, rotation:360, duration:.5, yoyo:true, repeat:1, ease:"power2.out"}));
   });
+
+  /* nav: links embaralham no hover */
+  document.querySelectorAll("nav ul a").forEach(a=>{
+    const t=a.textContent;
+    a.addEventListener("mouseenter",()=>gsap.to(a,{scrambleText:{text:t, chars:"01<>/{}#", speed:1}, duration:.5, overwrite:true}));
+  });
+
+  /* explosão de símbolos a cada clique */
+  const simbolos=["{","}","<",">","/","✦",";","()","💚","💜"], cores=["#42b883","#a855f7","#ff5fd2","#ffe14d"];
+  function explodir(x,y,n){
+    const anel=document.createElement("div"); anel.className="anel"; anel.style.left=x+"px"; anel.style.top=y+"px"; document.body.appendChild(anel);
+    gsap.fromTo(anel,{scale:0, opacity:1},{scale:4, opacity:0, duration:.8, ease:"expo.out", onComplete:()=>anel.remove()});
+    for(let i=0;i<n;i++){
+      const s=document.createElement("span"); s.className="estilhaco"; s.textContent=gsap.utils.random(simbolos);
+      s.style.left=x+"px"; s.style.top=y+"px"; s.style.color=gsap.utils.random(cores); document.body.appendChild(s);
+      gsap.to(s,{physics2D:{velocity:gsap.utils.random(250,600), angle:gsap.utils.random(200,340), gravity:900}, rotation:gsap.utils.random(-360,360), opacity:0, duration:1.5, ease:"power1.in", onComplete:()=>s.remove()});
+    }
+  }
+  addEventListener("click", e=>{ explodir(e.clientX, e.clientY, 14); if(mundo) mundo.pulso(); });
+  // chegou no contato: festa
+  ScrollTrigger.create({trigger:"#contato", start:"top 60%", once:true, onEnter:()=>{
+    const r=document.querySelector("#contato .win").getBoundingClientRect();
+    [0,.25,.5].forEach((d,i)=>gsap.delayedCall(d,()=>explodir(r.left+r.width*(.2+.3*i), r.top+40, 22)));
+  }});
+
+  /* partículas 3D mudam de forma em cada seção */
+  if(mundo){
+    [[".hero","esfera"],[".stats","esfera"],["#sobre","vue"],["#log","helice"],["#skills","cubo"],["#gatas","gato"],["#precos","no"],["#depos","no"],["#contato","coracao"]].forEach(([sel,forma])=>{
+      ScrollTrigger.create({trigger:sel, start:"top 55%", end:"bottom 55%", onEnter:()=>mundo.forma(forma), onEnterBack:()=>mundo.forma(forma)});
+    });
+  }
+
+  /* só no computador: cursor próprio, cards 3D e botões magnéticos */
+  if(temMouse){
+    document.documentElement.classList.add("cursor-on");
+    const c=document.getElementById("cursor"), d=document.getElementById("cursorDot");
+    const cx=gsap.quickTo(c,"x",{duration:.45, ease:"power3"}), cy=gsap.quickTo(c,"y",{duration:.45, ease:"power3"});
+    const dx=gsap.quickTo(d,"x",{duration:.08}), dy=gsap.quickTo(d,"y",{duration:.08});
+    addEventListener("mousemove", e=>{ cx(e.clientX); cy(e.clientY); dx(e.clientX); dy(e.clientY); });
+    document.addEventListener("mouseover", e=>{
+      const alvo=e.target.closest("a,button,.gata,.andarilha,.dots i");
+      gsap.to(c,{scale:alvo?1.9:1, borderColor:alvo?"#ff5fd2":"#42b883", duration:.3});
+    });
+    addEventListener("mousedown",()=>gsap.to(c,{scale:.6, duration:.15}));
+    addEventListener("mouseup",()=>gsap.to(c,{scale:1, duration:.5, ease:"elastic.out(1,.4)"}));
+
+    gsap.utils.toArray(".gata, .plano, .dep, .stats > div").forEach(card=>{
+      card.classList.add("tilt");
+      gsap.set(card,{transformPerspective:800});
+      const rx=gsap.quickTo(card,"rotationX",{duration:.5, ease:"power3"}), ry=gsap.quickTo(card,"rotationY",{duration:.5, ease:"power3"});
+      card.addEventListener("mousemove", e=>{
+        const r=card.getBoundingClientRect(), px=(e.clientX-r.left)/r.width-.5, py=(e.clientY-r.top)/r.height-.5;
+        ry(px*24); rx(-py*24);
+        card.style.setProperty("--gx",(px+.5)*100+"%"); card.style.setProperty("--gy",(py+.5)*100+"%");
+      });
+      card.addEventListener("mouseleave",()=>{ rx(0); ry(0); });
+    });
+
+    document.querySelectorAll(".btn:not(.musica)").forEach(b=>{
+      const xTo=gsap.quickTo(b,"x",{duration:.4, ease:"power3"}), yTo=gsap.quickTo(b,"y",{duration:.4, ease:"power3"});
+      b.addEventListener("mousemove", e=>{ const r=b.getBoundingClientRect(); xTo((e.clientX-r.left-r.width/2)*.35); yTo((e.clientY-r.top-r.height/2)*.35); });
+      b.addEventListener("mouseleave",()=>gsap.to(b,{x:0, y:0, duration:1, ease:"elastic.out(1,.3)"}));
+      b.addEventListener("mouseenter",()=>gsap.fromTo(b,{scaleX:1, scaleY:1},{keyframes:[{scaleX:1.15, scaleY:.85, duration:.12},{scaleX:.92, scaleY:1.08, duration:.12},{scaleX:1, scaleY:1, duration:.3, ease:"elastic.out(1,.4)"}]}));
+    });
+  }
 })();
 </script>
 </body>
